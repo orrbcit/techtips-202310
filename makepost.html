@@ -53,7 +53,7 @@
         <h1>Make a Post </h1>
         <form>
             <div class="form-group">
-                <label>Job Description</label>
+                <label>Description</label>
                 <textarea id="description" rows="4" cols="50"></textarea>
             </div>
             <div class="container py-3">
@@ -97,6 +97,7 @@
         // showUploadedPicture();
 
         var ImageFile;
+
         function listenFileSelect() {
             // listen for file selection
             var fileInput = document.getElementById("mypic-input"); // pointer #1
@@ -111,7 +112,7 @@
         listenFileSelect();
 
         function savePost() {
-            alert ("SAVE POST is triggered");
+            alert("SAVE POST is triggered");
             firebase.auth().onAuthStateChanged(function (user) {
                 if (user) {
                     // User is signed in.
@@ -125,7 +126,8 @@
                     }).then(doc => {
                         console.log("Post document added!");
                         console.log(doc.id);
-                        uploadPic(doc.id);
+                        saveNewPostID(user.uid, doc.id);
+                        //uploadPic(doc.id);
                     })
                 } else {
                     // No user is signed in.
@@ -155,6 +157,33 @@
                 .catch((error) => {
                     console.log("error uploading to cloud storage");
                 })
+        }
+
+        function saveNewPostID(userUID, postDocID) {
+            console.log("inside saveNewPostID");
+            console.log(userUID);
+            console.log(postDocID);
+            db.collection("users")
+                .doc(userUID)
+                .update({
+                    posts: firebase.firestore.FieldValue.arrayUnion(postDocID)
+                })
+                .then(() =>
+                    console.log("Saved to user's document!"))
+                .catch((error) => {
+                    console.error("Error writing document: ", error);
+                });
+
+            // db.collection("users").doc(userUID).set({
+            //         myposts: firebase.firestore.FieldValue.arrayUnion(postDocID)
+            //     }, {
+            //         merge: true
+            //     })
+            //     .then(() =>
+            //         console.log("Saved to user's document!"))
+            //     .catch((error) => {
+            //         console.error("Error writing document: ", error);
+            //     });
         }
     </script>
 
