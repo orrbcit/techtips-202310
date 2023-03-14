@@ -24,3 +24,10 @@
     width: 150px;
     height: 150px;
 }
+
+#map {
+    width: 700px;
+    height: 700px;
+  }
+
+#map1 { height: 180px; }
