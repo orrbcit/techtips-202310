@@ -209,7 +209,9 @@
         // handle error case
         function onError() {
             message.classList.add('error');
-            message.textContent = `Failed to get your location!`;
+            message.textContent = `Failed to get your location! Using default BCIT address.`;
+            AddressString = "3700 Willingdon Avenue, Burnaby, BC, Canada";
+            geocodeAddressString();
         }
     </script>
 
