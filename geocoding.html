@@ -75,14 +75,41 @@
 
     <!-- the body of your page goes here -->
     <!-- stuff -->
-    <div class="address-line">
-        <input id="address" type="text" placeholder="Enter address to search"><button onclick="geocodeAddress()">Geocode</button>
-    </div>
+    <div class="container">
+
+        <!-- <div class="container">
+            <div class="status">
+                <span id="status">Enter AddressString and press "Geocode" button</span>
+            </div>
+            <div class="AddressString-line">
+                <input id="AddressString" type="text" placeholder="Enter AddressString to search"><button
+                    onclick="geocodeAddressString()">Geocode</button>
+            </div>
+        </div>
+
+        <div class="container">
+            <h1>This is the result: <span id="result-latlong"></span></h1>
+            <div class="results">
+                <label for="name">Name:</label>
+                <input id="name" type="text" readonly />
+                <label for="house-number">House number:</label>
+                <input id="house-number" type="text" readonly />
+                <label for="street">Street:</label>
+                <input id="street" type="text" readonly />
+                <label for="postcode">Postcode:</label>
+                <input id="postcode" type="text" readonly />
+                <label for="city">City:</label>
+                <input id="city" type="text" readonly />
+                <label for="state">State:</label>
+                <input id="state" type="text" readonly />
+                <label for="country">Country:</label>
+                <input id="country" type="text" readonly />
+            </div>
+        </div>
+
+    </div> -->
 
     <div class="container">
-        <div class="click-to-map">
-            <h1>Click anywhere on the map</h1>
-        </div>
         <div id="message"></div>
         <div id="map"></div>
     </div>
@@ -98,17 +125,24 @@
     <!-- <script src="./scripts/script.js"></script> -->
 
     <script>
-        //var map = L.map('map').setView([51.505, -0.09], 13);
-        //var marker = L.marker([51.5, -0.09]).addTo(map);
-
         //--------------------------------------
         // MAP:  get current geolocation
         //---------------------------------------
-        navigator.geolocation.getCurrentPosition(onSuccess, onError);
-        var map; //for the map to be displayed
-        var marker; //for current location
-        var circle; //for destination location
-        var radius = 300;
+        var map;      //for the map to be displayed
+        var AddressString;  //for what was firestore
+        var LocationArea; //for new circle object
+        var radius = 500;
+
+        function readPost(){
+            db.collection("posts").doc("5rBbQO165bRGrmSQnOMZ")
+            .get()
+            .then(function(doc){
+                AddressString = doc.data().address;
+                console.log(AddressString);
+                navigator.geolocation.getCurrentPosition(onSuccess, onError);
+            })
+        }
+        readPost();
 
         //------------------------
         // handle success case
@@ -122,8 +156,8 @@
             // latitude = 49.236911;
             // longitude = -123.02317;
             //print helpful messages about current location
-            message.classList.add('success');
-            message.textContent = `Your location: (${latitude},${longitude})`;
+            //message.classList.add('success');
+            //message.textContent = `Your location: (${latitude},${longitude})`;
             //set map to be around current location
             //set a marker at the current location
             map = L.map('map').setView([latitude, longitude], 13);
@@ -135,35 +169,41 @@
                 attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
             }).addTo(map);
 
-            addMapClickListener();
+            geocodeAddressString();
         }
+        
 
-        function addMapClickListener() {
-            //create a popup when a location is clicked
-            //create a circle marker when a location is clicked
-            var popup = L.popup();
-            var location = new L.circle();
+        function geocodeAddressString() {
+            LocationArea = new L.circle();
+            var myAPIKey = "afee0b090ae44bfdb1bbf7bd1d439bc0";
 
-            //Create listener, and event handler for a click
-            //"e" is the clicked location
-            map.on('click', onMapClick);
-
-            function onMapClick(e) {
-                //assign content to popup message
-                popup
-                    .setLatLng(e.latlng)
-                    .setContent("You clicked the map at " + e.latlng.toString())
-                    .openOn(map);
-                //remove old layers with old circles
-                //create new circle around clicked location "e"
-                //add it to the  map
-                map.removeLayer(location);
-                location = new L.circle(e.latlng, {
-                    fillColor: '#f03',
-                    radius: radius,
-                });
-                map.addLayer(location);
+            if (LocationArea) {
+                map.removeLayer(LocationArea);
             }
+
+            message.textContent = 'Your location: '+ AddressString;
+
+            const geocodingUrl =
+                `https://api.geoapify.com/v1/geocode/search?text=${encodeURIComponent(AddressString)}&apiKey=${myAPIKey}`;
+
+            // call Geocoding API - https://www.geoapify.com/geocoding-api
+            fetch(geocodingUrl).then(result => result.json())
+                .then(featureCollection => {
+                    if (featureCollection.features.length === 0) {
+                        document.getElementById("status").textContent = "The AddressString is not found";
+                        return;
+                    }
+
+                    const foundAddressString = featureCollection.features[0];
+                    LocationArea = new L.circle(new L.LatLng(foundAddressString.properties.lat, foundAddressString.properties.lon), {
+                        fillColor: '#f03',
+                        radius: radius,
+                    });
+                    map.addLayer(LocationArea);
+
+                    //marker = L.marker(new L.LatLng(foundAddressString.properties.lat, foundAddressString.properties.lon)).addTo(map);
+                    map.panTo(new L.LatLng(foundAddressString.properties.lat, foundAddressString.properties.lon));
+                });
         }
 
         // handle error case
