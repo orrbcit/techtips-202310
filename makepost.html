@@ -181,6 +181,7 @@
                     .then(() => {
                         console.log("5. Saved the post to user's document!");
                         alert("Post is complete!");
+                        window.location.href = "showposts.html";
                     })
                     .catch((error) => {
                         console.error("Failed to save post for the user: ", error);

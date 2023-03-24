@@ -49,13 +49,13 @@
 
     <!-- the body of your page goes here -->
     <!-- stuff -->
-    <div class="container">
+    <div class="container py-5">
         <h1>Show All Posts </h1>
         <div id="posts-go-here" class="row row-cols-auto">
         </div>
     </div>
 
-    <div class="container">
+    <div class="container py-5">
         <h1>Show My Posts <span id="name-goes-here"></span></h1>
         <div id="myposts-go-here" class="row row-cols-auto">
         </div>
@@ -70,6 +70,7 @@
                 <p class="card-description">placeholder</p>
                 <br>
                 <a class="btn btn-secondary card-href" id="read-more">Read more ...</a>
+                <button id="apply-btn" type="button" class="btn btn-success">Apply</button>
                 <i class="material-icons" id="delete-icon">delete</i>
             </div>
         </div>
@@ -109,6 +110,7 @@
             newcard.querySelector('.card-image').src = image;
             newcard.querySelector('.card-description').innerHTML = desc;
             newcard.querySelector('#delete-icon').onclick = () => deletePost(doc.id);
+            newcard.querySelector('#apply-btn').onclick = () => applyNow(doc.data().owner);
 
             //append to the posts
             document.getElementById("posts-go-here").append(newcard);
@@ -148,6 +150,7 @@
             newcard.querySelector('.card-image').src = image;
             newcard.querySelector('.card-description').innerHTML = desc;
             newcard.querySelector('#delete-icon').onclick = () => deletePost(doc.id);
+            newcard.querySelector('#apply-btn').onclick = () => applyNow(doc.data().owner);
 
             //append to the posts
             document.getElementById("myposts-go-here").append(newcard);
@@ -211,6 +214,37 @@
             }).catch((error) => {
                 // Uh-oh, an error occurred!
             });
+        }
+
+        //------------------------------------------------
+        // This function will go to the Owner's document
+        // set a field called "alert", and the value will be 
+        // the document ID of the person who clicked "apply"
+        // ie, the person who is logged in now. 
+        //-------------------------------------------------
+        function applyNow(owner) {
+            firebase.auth().onAuthStateChanged(user => {
+                if (owner != user.uid) {
+                    db.collection("users").doc(owner).get()
+                    .then(doc => {
+                        ownername = doc.data().name;
+                        owneremail = doc.data().email;
+
+                        // window.open('mailto:test@example.com?subject=subject&body=body');
+
+                        window.open('mailto:'+
+                        owneremail
+                        +'?subject=Applying for your job&body=' +
+                        "Dear " + ownername +
+                        " ... " +
+                        "Sincerely, " + user.displayName);
+                        alert("The owner of the post will be alerted!");
+                    })             
+                }
+                else{
+                    alert("You cannot apply for a job that you posted!");
+                }
+            })
         }
     </script>
 
