@@ -9,3 +9,18 @@ function logout() {
         // An error happened.
       });
 }
+
+function addUsersDocField(){
+    console.log("inside addUsersDocField function");
+    db.collection("users")
+    .get()
+    .then(snap=>{
+      snap.forEach(doc=>{
+        db.collection("users").doc(doc.id)
+        .update({
+          location: "3700 Willingdon Ave, Burnaby"
+        })
+      })
+    })
+}
+addUsersDocField();

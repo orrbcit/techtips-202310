@@ -53,9 +53,9 @@
         integrity="sha256-WBkoXOwTeyKclOHuWtc+i2uENFpDZ9YPdf5Hf+D7ewM=" crossorigin=""></script>
 
     <style type="text/css">
-        body {
+        /* body {
             margin: 0;
-        }
+        } */
 
         #map {
             width: 500px;
@@ -75,171 +75,138 @@
 
     <!-- the body of your page goes here -->
     <!-- stuff -->
+
     <div class="container">
+        <div id="message"></div>
+        <div id="map"></div>
+    </div>
 
-        <!-- <div class="container">
-            <div class="status">
-                <span id="status">Enter AddressString and press "Geocode" button</span>
-            </div>
-            <div class="AddressString-line">
-                <input id="AddressString" type="text" placeholder="Enter AddressString to search"><button
-                    onclick="geocodeAddressString()">Geocode</button>
-            </div>
-        </div>
+    <!-- our own footer goes here-->
+    <nav id="footerPlaceholder"></nav>
 
-        <div class="container">
-            <h1>This is the result: <span id="result-latlong"></span></h1>
-            <div class="results">
-                <label for="name">Name:</label>
-                <input id="name" type="text" readonly />
-                <label for="house-number">House number:</label>
-                <input id="house-number" type="text" readonly />
-                <label for="street">Street:</label>
-                <input id="street" type="text" readonly />
-                <label for="postcode">Postcode:</label>
-                <input id="postcode" type="text" readonly />
-                <label for="city">City:</label>
-                <input id="city" type="text" readonly />
-                <label for="state">State:</label>
-                <input id="state" type="text" readonly />
-                <label for="country">Country:</label>
-                <input id="country" type="text" readonly />
-            </div>
-        </div>
+    <!---------------------------------------------->
+    <!-- Your own JavaScript functions go here    -->
+    <!---------------------------------------------->
+    <script src="./scripts/firebaseAPI_TEAM99.js"></script>
+    <script src="./scripts/skeleton.js"></script>
+    <!-- <script src="./scripts/script.js"></script> -->
 
-    </div> -->
+    <script>
+        //--------------------------------------
+        // MAP:  get current geolocation
+        //---------------------------------------
+        navigator.geolocation.getCurrentPosition(onSuccess, onError);
+        var map; //for the map to be displayed
+        var markerArray = [];
+        //var AddressString; //for what was firestore
+        //var LocationArea; //for new circle object
+        //var radius = 500;
 
-        <div class="container">
-            <div id="message"></div>
-            <div id="map"></div>
-        </div>
-
-        <!-- our own footer goes here-->
-        <nav id="footerPlaceholder"></nav>
-
-        <!---------------------------------------------->
-        <!-- Your own JavaScript functions go here    -->
-        <!---------------------------------------------->
-        <script src="./scripts/firebaseAPI_TEAM99.js"></script>
-        <script src="./scripts/skeleton.js"></script>
-        <!-- <script src="./scripts/script.js"></script> -->
-
-        <script>
-            //--------------------------------------
-            // MAP:  get current geolocation
-            //---------------------------------------
-            navigator.geolocation.getCurrentPosition(onSuccess, onError);
-            var map; //for the map to be displayed
-            var markerArray = [];
-            //var AddressString; //for what was firestore
-            //var LocationArea; //for new circle object
-            //var radius = 500;
-
-            function readPost() {
-                db.collection("posts")
-                    .get()
-                    .then(snap => {
-                        snap.forEach(doc => {
-                            AddressString = doc.data().address;
-                            console.log(AddressString);
-                            if (AddressString)
-                                placeMarker(AddressString); //not null
-                        })
-
+        function readPost() {
+            db.collection("posts")
+                .get()
+                .then(snap => {
+                    snap.forEach(doc => {
+                        AddressString = doc.data().address;
+                        console.log(AddressString);
+                        if (AddressString)
+                            placeMarker(AddressString); //not null
                     })
-            }
-            readPost();
 
-            //------------------------
-            // handle success case
-            //------------------------
-            function onSuccess(position) { //callback function
-                const {
-                    latitude,
-                    longitude
-                } = position.coords;
+                })
+        }
+        readPost();
 
-                //const latitude = 49.236911;
-                //const longitude = -123.02317;
+        //------------------------
+        // handle success case
+        //------------------------
+        function onSuccess(position) { //callback function
+            const {
+                latitude,
+                longitude
+            } = position.coords;
 
-                //print helpful messages about current location
-                //message.classList.add('success');
-                //message.textContent = `Your location: (${latitude},${longitude})`;
-                //set map to be around current location
-                //set a marker at the current location
-                map = L.map('map').setView([latitude, longitude], 13);
-                marker = L.marker([latitude, longitude]).addTo(map)
-                    .bindPopup('Your Current Location.<br> Easily customizable.')
-                    .openPopup();
+            //const latitude = 49.236911;
+            //const longitude = -123.02317;
 
-                //put overlay on the map, give credit where credit is due
-                L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    maxZoom: 19,
-                    attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                }).addTo(map);
+            //print helpful messages about current location
+            //message.classList.add('success');
+            //message.textContent = `Your location: (${latitude},${longitude})`;
+            //set map to be around current location
+            //set a marker at the current location
+            map = L.map('map').setView([latitude, longitude], 13);
+            marker = L.marker([latitude, longitude]).addTo(map)
+                .bindPopup('Your Current Location.<br> Easily customizable.')
+                .openPopup();
 
-                //geocodeAddressString();
-            }
+            //put overlay on the map, give credit where credit is due
+            L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            }).addTo(map);
 
-            let marker;
+            //geocodeAddressString();
+        }
 
-            function placeMarker(addr) {
-                var myAPIKey = "afee0b090ae44bfdb1bbf7bd1d439bc0";
+        let marker;
 
-                message.textContent = 'Your location: ' + addr; //some message for debugging
+        function placeMarker(addr) {
+            var myAPIKey = "afee0b090ae44bfdb1bbf7bd1d439bc0";
 
-                // construct the geocoding url string, using addr input parameter
-                const geocodingUrl =
-                    `https://api.geoapify.com/v1/geocode/search?text=${encodeURIComponent(addr)}&apiKey=${myAPIKey}`;
+            message.textContent = 'Your location: ' + addr; //some message for debugging
 
-                // call Geocoding API - https://www.geoapify.com/geocoding-api
-                fetch(geocodingUrl).then(result => result.json())
-                    .then(featureCollection => {
-                        if (featureCollection.features.length === 0) {
-                            document.getElementById("status").textContent = "The AddressString is not found";
-                            return;
-                        }
+            // construct the geocoding url string, using addr input parameter
+            const geocodingUrl =
+                `https://api.geoapify.com/v1/geocode/search?text=${encodeURIComponent(addr)}&apiKey=${myAPIKey}`;
 
-                        // Let's use the first returned found address
-                        const foundAddress = featureCollection.features[0];
+            // call Geocoding API - https://www.geoapify.com/geocoding-api
+            fetch(geocodingUrl).then(result => result.json())
+                .then(featureCollection => {
+                    if (featureCollection.features.length === 0) {
+                        document.getElementById("status").textContent = "The AddressString is not found";
+                        return;
+                    }
 
-                        // customized green icon 
-                        var greenIcon = new L.Icon({
-                            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
-                            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-                            iconSize: [25, 41],
-                            iconAnchor: [12, 41],
-                            popupAnchor: [1, -34],
-                            shadowSize: [41, 41]
-                        });
+                    // Let's use the first returned found address
+                    const foundAddress = featureCollection.features[0];
 
-                        // create a marker based on the found address geolocation
-                        // use a customized icon called "greenIcon"
-                        // place this marker on the map, with Popup when clicked
-                        marker = L.marker(new L.LatLng(foundAddress.properties.lat,
-                                foundAddress.properties.lon), {
-                                icon: greenIcon
-                            })
-                            .addTo(map)
-                            .bindPopup('A pretty CSS3 popup.<br> Easily customizable.')
-                            .openPopup();
-
-                        // add this new marker to the array
-                        // create a display group, and fitBounds (ie, zoom out)
-                        markerArray.push(marker);
-                        var group = L.featureGroup(markerArray).addTo(map);
-                        map.fitBounds(group.getBounds());
+                    // customized green icon 
+                    var greenIcon = new L.Icon({
+                        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+                        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                        iconSize: [25, 41],
+                        iconAnchor: [12, 41],
+                        popupAnchor: [1, -34],
+                        shadowSize: [41, 41]
                     });
-            }
 
-            // handle error case
-            function onError() {
-                message.classList.add('error');
-                message.textContent = `Failed to get your location! Using default BCIT address.`;
-                AddressString = "3700 Willingdon Avenue, Burnaby, BC, Canada";
-                geocodeAddressString();
-            }
-        </script>
+                    // create a marker based on the found address geolocation
+                    // use a customized icon called "greenIcon"
+                    // place this marker on the map, with Popup when clicked
+                    marker = L.marker(new L.LatLng(foundAddress.properties.lat,
+                            foundAddress.properties.lon), {
+                            icon: greenIcon
+                        })
+                        .addTo(map)
+                        .bindPopup('A pretty CSS3 popup.<br> Easily customizable.')
+                        .openPopup();
+
+                    // add this new marker to the array
+                    // create a display group, and fitBounds (ie, zoom out)
+                    markerArray.push(marker);
+                    var group = L.featureGroup(markerArray).addTo(map);
+                    map.fitBounds(group.getBounds());
+                });
+        }
+
+        // handle error case
+        function onError() {
+            message.classList.add('error');
+            message.textContent = `Failed to get your location! Using default BCIT address.`;
+            AddressString = "3700 Willingdon Avenue, Burnaby, BC, Canada";
+            geocodeAddressString();
+        }
+    </script>
 
 </body>
 

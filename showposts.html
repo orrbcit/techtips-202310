@@ -34,7 +34,7 @@
     <!-------------------------------------------->
     <!-- Other libraries and styles of your own -->
     <!-------------------------------------------->
-    <!-- <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"> -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <!-- <link rel="stylesheet" href="./styles/style.css"> -->
 
 </head>
@@ -50,11 +50,30 @@
     <!-- the body of your page goes here -->
     <!-- stuff -->
     <div class="container">
-        <h1>Show My Posts </h1>
-        <div id="myposts-go-here">
-
+        <h1>Show All Posts </h1>
+        <div id="posts-go-here" class="row row-cols-auto">
         </div>
     </div>
+
+    <div class="container">
+        <h1>Show My Posts <span id="name-goes-here"></span></h1>
+        <div id="myposts-go-here" class="row row-cols-auto">
+        </div>
+    </div>
+
+    <!-- Templates for general use, not displayed -->
+    <template id="postCardTemplate">
+        <div class="card py-2 mx-2 bg-light" style="width: 10rem;">
+            <img class="card-image card-img-top" src=" ..." alt="...">
+            <div class="card-body">
+                <h5 class="card-title">Card title</h5>
+                <p class="card-description">placeholder</p>
+                <br>
+                <a class="btn btn-secondary card-href" id="read-more">Read more ...</a>
+                <i class="material-icons" id="delete-icon">delete</i>
+            </div>
+        </div>
+    </template>
 
     <!-- our own footer goes here-->
     <nav id="footerPlaceholder"></nav>
@@ -67,38 +86,119 @@
     <script src="./scripts/skeleton.js"></script>
     <!-- <script src="./scripts/script.js"></script> -->
     <script>
+        function showPosts() {
+            db.collection("posts")
+                .get()
+                .then(snap => {
+                    snap.forEach(doc => {
+                        displayPostCard(doc);
+                    })
+                })
+        }
+        showPosts();
+
+        function displayPostCard(doc) {
+            var title = doc.data().name; // get value of the "name" key
+            var desc = doc.data().description; //gets the length field
+            var image = doc.data().image; //the field that contains the URL 
+
+            //clone the new card
+            let newcard = document.getElementById("postCardTemplate").content.cloneNode(true);
+            //populate with title, image
+            newcard.querySelector('.card-title').innerHTML = title;
+            newcard.querySelector('.card-image').src = image;
+            newcard.querySelector('.card-description').innerHTML = desc;
+            newcard.querySelector('#delete-icon').onclick = () => deletePost(doc.id);
+
+            //append to the posts
+            document.getElementById("posts-go-here").append(newcard);
+        }
+
+
         function showMyPosts() {
-            firebase.auth().onAuthStateChanged(function (user) {
-                if (user) {
-                    // User is signed in.
-                    // Do something for the user here. 
-                    db.collection("users").doc(user.uid).get()
-                        .then(doc => {
-                            console.log(doc.data());
-                            var myposts = doc.data().myposts;
-                            myposts.forEach(item => {
-                                console.log(item);
-                                db.collection("posts").doc(item)
+            firebase.auth().onAuthStateChanged(user => {
+                console.log("user is: " + user.uid);
+                db.collection("users").doc(user.uid)
+                    .get()
+                    .then(doc => {
+                        myposts = doc.data().myposts; //get array of my posts
+                        console.log(myposts);
+                        myposts.forEach(item => {
+                            db.collection("posts")
+                                .doc(item)
                                 .get()
-                                .then(doc =>{
-                                    console.log(doc.data().description);
-                                    //displayCardPost(doc.data());
+                                .then(doc => {
+                                    displayMyPostCard(doc);
                                 })
-                            })
                         })
-                } else {
-                    // No user is signed in.
-                    console.log("Error: no user is logged in");
-                }
-            });
+                    })
+            })
         }
         showMyPosts();
-        function displayCardPost(){
-            newcard = 
-            document.getElementById("posts-go-here").append(newcard);
+
+        function displayMyPostCard(doc) {
+            var title = doc.data().name; // get value of the "name" key
+            var desc = doc.data().description; //gets the length field
+            var image = doc.data().image; //the field that contains the URL 
+
+            //clone the new card
+            let newcard = document.getElementById("postCardTemplate").content.cloneNode(true);
+            //populate with title, image
+            newcard.querySelector('.card-title').innerHTML = title;
+            newcard.querySelector('.card-image').src = image;
+            newcard.querySelector('.card-description').innerHTML = desc;
+            newcard.querySelector('#delete-icon').onclick = () => deletePost(doc.id);
+
+            //append to the posts
+            document.getElementById("myposts-go-here").append(newcard);
+        }
+
+        function insertNameFromFirebase() {
+            // to check if the user is logged in:
+            firebase.auth().onAuthStateChanged(user => {
+                if (user) {
+                    console.log(user.uid); // let me to know who is the user that logged in to get the UID
+                    currentUser = db.collection("users").doc(user
+                        .uid); // will to to the firestore and go to the document of the user
+                    currentUser.get().then(userDoc => {
+                        //get the user name
+                        var user_Name = userDoc.data().name;
+                        console.log(user_Name);
+                        $("#name-goes-here").text(user_Name); //jquery
+                        // document.getElementByID("name-goes-here").innetText=user_Name;
+                    })
+                }
+            })
+        }
+        insertNameFromFirebase();
+
+        function deletePost(postid) {
+            var result = confirm("Want to delete?");
+            if (result) {
+                //Logic to delete the item
+                db.collection("posts").doc(postid).delete()
+                .then(() => {
+                    console.log("Document successfully deleted!");
+                    deleteFromMyPosts(postid);
+                }).catch((error) => {
+                    console.error("Error deleting document: ", error);
+                });
+            }
+        }
+
+        function deleteFromMyPosts(postid) {
+            firebase.auth().onAuthStateChanged(user => {
+                db.collection("users").doc(user.uid).update({
+                        myposts: firebase.firestore.FieldValue.arrayRemove(postid)
+                    })
+                    .then(() => {
+                        alert("DELETE is completed!");
+                        location.reload();
+                    })
+            })
         }
     </script>
 
 </body>
 
-</html>
+</html
