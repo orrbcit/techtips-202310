@@ -177,12 +177,12 @@
             if (result) {
                 //Logic to delete the item
                 db.collection("posts").doc(postid).delete()
-                .then(() => {
-                    console.log("Document successfully deleted!");
-                    deleteFromMyPosts(postid);
-                }).catch((error) => {
-                    console.error("Error deleting document: ", error);
-                });
+                    .then(() => {
+                        console.log("1. doc deleted from posts collection");
+                        deleteFromMyPosts(postid);
+                    }).catch((error) => {
+                        console.error("Error deleting document: ", error);
+                    });
             }
         }
 
@@ -192,10 +192,25 @@
                         myposts: firebase.firestore.FieldValue.arrayRemove(postid)
                     })
                     .then(() => {
-                        alert("DELETE is completed!");
-                        location.reload();
+                        console.log("2. post deleted from user doc");
+                        deleteFromStorage(postid);
                     })
             })
+        }
+
+        function deleteFromStorage(postid) {
+            // Create a reference to the file to delete
+            var imageRef = storage.ref('images/' + postid + '.jpg');
+
+            // Delete the file
+            imageRef.delete().then(() => {
+                // File deleted successfully
+                console.log("3. image deleted from storage");
+                alert("DELETE is completed!");
+                location.reload();
+            }).catch((error) => {
+                // Uh-oh, an error occurred!
+            });
         }
     </script>
 
