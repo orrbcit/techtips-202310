@@ -176,6 +176,8 @@
         insertNameFromFirebase();
 
         function deletePost(postid) {
+
+            // Double check! Usability Heuristics #5
             var result = confirm("Want to delete?");
             if (result) {
                 //Logic to delete the item
@@ -226,22 +228,21 @@
             firebase.auth().onAuthStateChanged(user => {
                 if (owner != user.uid) {
                     db.collection("users").doc(owner).get()
-                    .then(doc => {
-                        ownername = doc.data().name;
-                        owneremail = doc.data().email;
+                        .then(doc => {
+                            ownername = doc.data().name;
+                            owneremail = doc.data().email;
 
-                        // window.open('mailto:test@example.com?subject=subject&body=body');
+                            // window.open('mailto:test@example.com?subject=subject&body=body');
 
-                        window.open('mailto:'+
-                        owneremail
-                        +'?subject=Applying for your job&body=' +
-                        "Dear " + ownername +
-                        " ... " +
-                        "Sincerely, " + user.displayName);
-                        alert("The owner of the post will be alerted!");
-                    })             
-                }
-                else{
+                            window.open('mailto:' +
+                                owneremail +
+                                '?subject=Applying for your job&body=' +
+                                "Dear " + ownername +
+                                " ... " +
+                                "Sincerely, " + user.displayName);
+                            alert("The owner of the post will be alerted!");
+                        })
+                } else {
                     alert("You cannot apply for a job that you posted!");
                 }
             })

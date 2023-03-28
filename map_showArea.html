@@ -101,7 +101,7 @@
         var radius = 500;
 
         function readPost(){
-            db.collection("posts").doc("5rBbQO165bRGrmSQnOMZ")
+            db.collection("posts").doc("6CjpilST7QZXHGgmZ6kh")
             .get()
             .then(function(doc){
                 AddressString = doc.data().address;
@@ -109,7 +109,11 @@
                 navigator.geolocation.getCurrentPosition(onSuccess, onError);
             })
         }
-        readPost();
+        //readPost();
+
+        AddressString = "3700 Willingdon, BC, Canada";
+        navigator.geolocation.getCurrentPosition(onSuccess, onError);
+
 
         //------------------------
         // handle success case
