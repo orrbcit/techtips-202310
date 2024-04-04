@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>My BCIT Project</title>
+    <meta name="comp1800 template" content="My 1800 App">
+
+    <!------------------------>
+    <!-- Required meta tags -->
+    <!------------------------>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!------------------------------------------>
+    <!-- Bootstrap Library CSS JS CDN go here -->
+    <!------------------------------------------>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous">
+        </script>
+
+    <!-------------------------------------------------------->
+    <!-- Firebase 8 Library related CSS, JS, JQuery go here -->
+    <!-------------------------------------------------------->
+    <!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/ui/4.8.1/firebase-ui-auth.js"></script> 
+    <link type="text/css" rel="stylesheet" href="https://www.gstatic.com/firebasejs/ui/4.8.1/firebase-ui-auth.css" /> -->
+
+    <!-------------------------------------------->
+    <!-- Other libraries and styles of your own -->
+    <!-------------------------------------------->
+    <!-- <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"> -->
+    <!-- <link rel="stylesheet" href="./styles/style.css"> -->
+
+</head>
+
+<body>
+    <!------------------------------>
+    <!-- Your HTML Layout go here -->
+    <!------------------------------>
+
+    <!-- our own navbar goes here -->
+    <!-- <nav id="navbarPlaceholder"></nav> -->
+
+    <!-- the body of your page goes here -->
+    <!-- stuff -->
+    <div class="container">
+        <h1> Hello, World</h1>
+        <button onclick="saveDataWithTime();" type="button" class="btn btn-success">saveDataWithTime</button>
+    </div>
+
+    
+    <div class="alert alert-primary d-flex align-items-center" role="alert">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-exclamation-triangle-fill flex-shrink-0 me-2" viewBox="0 0 16 16" role="img" aria-label="Warning:">
+          <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+        </svg>
+        <div>
+          An example alert with an icon
+        </div>
+      </div>
+
+    <!-- our own footer goes here-->
+    <!-- <nav id="footerPlaceholder"></nav> -->
+
+    <!---------------------------------------------->
+    <!-- Your own JavaScript functions go here    -->
+    <!---------------------------------------------->
+    <!-- <script src="./scripts/firebaseAPI_TEAM99.js"></script>
+    <script src="./scripts/skeleton.js"></script> -->
+    <!-- <script src="./scripts/script.js"></script> -->
+    <script>
+        function saveDataWithTime() {
+            //get some data from user
+            var input = prompt("Enter your score: ");
+            var currentDate = new Date();  //get current date
+
+            //construct data object as JSON
+            var obj = {
+                info: input,
+                date: currentDate
+            }
+            //---------------------
+            //Save Data
+            //---------------------
+
+            //method1:  localstorage
+            localStorage.setItem("data", obj);
+
+            //method2:  write to json file
+            writeJSON(obj);
+
+            //method3:  write to firebase
+            // db.collection("users").doc(user.uid).collection("scrores")
+            //     .add(obj)
+            //     .then(doc => {
+            //         console.log("added new doc!");
+            //     })
+
+            //method4: write to mysql
+            //tbd
+        }
+
+        //import fs from 'fs';
+        function writeJSON(obj) {
+            // importing the fs module
+            //const fs = require("fs");
+
+            // converting the JSON object to a string
+            const data = JSON.stringify(obj);
+
+            // writing the JSON string content to a file
+            fs.writeFile("data.json", data, (error) => {
+                // throwing the error
+                // in case of a writing problem
+                if (error) {
+                    // logging the error
+                    console.error(error);
+                    throw error;
+                }
+                console.log("data.json written correctly");
+            });
+
+        }
+        function testWrite() {
+            const { writeFileSync } = require("fs");
+
+            const path = "purchase_history.json";
+
+            const purchase_hist = { "name": "John Smith", "purchase_id": "20223", "price": "$23.95", "shipping_address": { "name": "Jane Smith", "address": "123 Maple Street", "city": "Pretendville", "state": "NY", "zip": 10005 }, "billing_address": { "name": "John Smith", "address": "123 Maple Street", "city": "Pretendville", "state": "NY", "zip": 10005 }, "is_reverse_charge_applied": false, "warehouse": [{ "warehouse_name": "ABC Warehouse", "warehouse_id": 143 }] };
+
+            try {
+                writeFileSync(path, JSON.stringify(purchase_hist, null, 2), "utf8");
+                console.log("Data successfully saved");
+            } catch (error) {
+                console.log("An error has occurred ", error);
+            }
+        }
+        testWrite;
+    </script>
+
+</body>
+
+</html>

@@ -1,12 +1,12 @@
-
-function showEventsOnMap() {
+// MAPBOX DISPLAY
+function showStoresOnMap() {
     // Defines basic mapbox data
     mapboxgl.accessToken = 'pk.eyJ1IjoiYWRhbWNoZW4zIiwiYSI6ImNsMGZyNWRtZzB2angzanBjcHVkNTQ2YncifQ.fTdfEXaQ70WoIFLZ2QaRmQ';
     const map = new mapboxgl.Map({
         container: 'map', // Container ID
         style: 'mapbox://styles/mapbox/streets-v11', // Styling URL
-        center: [-122.964274, 49.236082], // Starting position
-        zoom: 8 // Starting zoom
+        center: [-122.801495, 49.162839], // Starting position
+        zoom: 10 // Starting zoom
     });
 
     // Add user controls to map
@@ -26,24 +26,25 @@ function showEventsOnMap() {
                 map.addImage('eventpin', image); // Pin Icon
 
                 // READING information from "events" collection in Firestore
-                db.collection("hikes").get().then(allEvents => {
+                db.collection("stores").get().then(allEvents => {
                     allEvents.forEach(doc => {
-                        lat = doc.data().lat; 
+                        // get store Coordinates
+                        lat = doc.data().lat;
                         lng = doc.data().lng;
-                        console.log(lat,lng);
+                        console.log(lat, lng);
                         coordinates = [lng, lat];
                         console.log(coordinates);
-                        // Coordinates
-                        event_name = doc.data().name; // Event Name
-                        preview = doc.data().details; // Text Preview
-                        // img = doc.data().posterurl; // Image
-                        // url = doc.data().link; // URL
+                        //read name and the status of stores
+                        event_name = doc.data().name; // Status
+                        preview = "Status: " + doc.data().status + "<br/>" + doc.data().location; // Text Preview
+
 
                         // Pushes information into the features array
                         features.push({
                             'type': 'Feature',
                             'properties': {
-                                'description': `<strong>${event_name}</strong><p>${preview}</p> <br> <a href="/hike.html?id=${doc.id}" target="_blank" title="Opens in a new window">Read more</a>`
+                                // 'description': `<strong>${event_name}</strong><p>${preview}</p> <br> <button onclick="window.open('/eachStore.html?id=${doc.id}', '_blank')" title="Opens in a new window">Info</button>`
+                                'description': `<strong>${event_name}</strong><p>${preview}</p> <br> <button class="custom-button" onclick="window.open('/eachStore.html?id=${doc.id}', '_blank')" title="Opens in a new window">Info</button>`
                             },
                             'geometry': {
                                 'type': 'Point',
@@ -105,4 +106,4 @@ function showEventsOnMap() {
     })
 }
 
-showEventsOnMap();
+showStoresOnMap()

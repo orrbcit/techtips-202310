@@ -1,0 +1,26 @@
+{
+  "name": "John Smith",
+  "purchase_id": "20223",
+  "price": "$23.95",
+  "shipping_address": {
+    "name": "Jane Smith",
+    "address": "123 Maple Street",
+    "city": "Pretendville",
+    "state": "NY",
+    "zip": 10005
+  },
+  "billing_address": {
+    "name": "John Smith",
+    "address": "123 Maple Street",
+    "city": "Pretendville",
+    "state": "NY",
+    "zip": 10005
+  },
+  "is_reverse_charge_applied": false,
+  "warehouse": [
+    {
+      "warehouse_name": "ABC Warehouse",
+      "warehouse_id": 143
+    }
+  ]
+}
