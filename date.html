@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>My BCIT Project</title>
+    <meta name="comp1800 template" content="My 1800 App">
+
+    <!------------------------>
+    <!-- Required meta tags -->
+    <!------------------------>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!------------------------------------------>
+    <!-- Bootstrap Library CSS JS CDN go here -->
+    <!------------------------------------------>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous">
+        </script>
+
+    <!-------------------------------------------------------->
+    <!-- Firebase 8 Library related CSS, JS, JQuery go here -->
+    <!-------------------------------------------------------->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/ui/4.8.1/firebase-ui-auth.js"></script>
+    <link type="text/css" rel="stylesheet" href="https://www.gstatic.com/firebasejs/ui/4.8.1/firebase-ui-auth.css" />
+
+    <!-------------------------------------------->
+    <!-- Other libraries and styles of your own -->
+    <!-------------------------------------------->
+    <!-- <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"> -->
+    <!-- <link rel="stylesheet" href="./styles/style.css"> -->
+
+</head>
+
+<body>
+    <!------------------------------>
+    <!-- Your HTML Layout go here -->
+    <!------------------------------>
+
+    <!-- our own navbar goes here -->
+    <nav id="navbarPlaceholder"></nav>
+
+    <!-- the body of your page goes here -->
+    <!-- stuff -->
+    <div class="conatainer py-5 px-5">
+        <label for="start">Select date:</label>
+        <input type="date" id="start" name="trip-start" value="2024-07-22" min="2024-01-01" max="2024-12-31" />
+        <br>
+        <label for="start">This is the date you selected: <span id="date-goes-here">blah</span></label>
+        <br>
+        <input type="button" onclick="saveDateToFirestore()" value="Save to Firestore">
+        <label for="start">This is the date read from firestore <span id="readdate-goes-here">blah</span></label>
+        <br>
+    </div>
+
+    <!-- our own footer goes here-->
+    <nav id="footerPlaceholder"></nav>
+
+    <!---------------------------------------------->
+    <!-- Your own JavaScript functions go here    -->
+    <!---------------------------------------------->
+    <script src="./scripts/firebaseAPI_TEAM99.js"></script>
+    <script src="./scripts/skeleton.js"></script>
+    <!-- <script src="./scripts/script.js"></script> -->
+    <script>
+
+
+        // Event listener to update the displayed date on change
+        function setupDateListener() {
+            const dateInput = document.getElementById('start');
+
+            // Initial display when page loads
+            displayDate(dateInput.value);
+
+            // Add event listener for date input changes
+            dateInput.addEventListener('change', (event) => {
+                displayDate(event.target.value);
+            });
+        }
+        // Initialize the event listener on page load
+        setupDateListener();
+
+        // Function to format and display the selected date
+        var SelectedDate;
+        function displayDate(dateString) {
+            
+            const dateDisplay = document.getElementById('date-goes-here');
+
+            // Parse the date manually, to avoid shifting of time zones.
+            // if you DO care about time zones, then simple use:
+            // formattedDate = new Date(dateString.value);
+            const [year, month, day] = dateString.split('-').map(Number);
+            SelectedDate = new Date(year, month-1, day);
+            const formattedDate = SelectedDate.toLocaleDateString(undefined, {
+                year: 'numeric', month: 'long', day: 'numeric'
+            });
+            dateDisplay.textContent = formattedDate;  //show it on page
+        }
+
+        function saveDateToFirestore() {
+            console.log("this is what we want to save:  " + SelectedDate);
+            //convert to Firestore timestamp object
+            var timestamp = firebase.firestore.Timestamp.fromDate(SelectedDate);
+
+            // Replace 'yourFirestoreCollection' and 'documentId' with your actual Firestore collection and document ID
+            firebase.firestore().collection('yourFirestoreCollection').doc('documentId').set({
+                date: timestamp
+            }, { merge: true })
+                .then(() => {
+                    console.log("Date successfully written to Firestore!");
+                })
+                .catch((error) => {
+                    console.error("Error writing date to Firestore: ", error);
+                });
+        }
+
+
+    // Function to format and display the date
+    function displayReadDate(dateString) {
+        const dateDisplay = document.getElementById('readdate-goes-here');
+
+        // Parse the date manually
+        //const [year, month, day] = dateString.split('-').map(Number);
+        const formattedDate = dateString.toLocaleDateString(undefined, { 
+            year: 'numeric', month: 'long', day: 'numeric' 
+        });  
+        dateDisplay.textContent = formattedDate;
+    }
+    // Function to read date from Firestore and display it using .then()
+    function fetchDateFromFirestore() {
+        const docRef = db.collection("yourFirestoreCollection").doc("documentId");
+
+        docRef.get().then((doc) => {
+            if (doc.exists) {
+                const dateString = doc.data().date.toDate(); // assuming the field is a string in YYYY-MM-DD format
+                console.log(dateString)
+                displayReadDate(dateString);
+            } else {
+                console.log("No such document!");
+                document.getElementById('readdate-goes-here').textContent = "Date not found";
+            }
+        }).catch((error) => {
+            console.error("Error fetching date: ", error);
+            document.getElementById('readdate-goes-here').textContent = "Error fetching date";
+        });
+    }
+
+    // Fetch date from Firestore on page load
+    fetchDateFromFirestore();
+
+    </script>
+
+</body>
+
+</html>
