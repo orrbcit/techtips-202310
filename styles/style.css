@@ -31,3 +31,9 @@
   }
 
 #map1 { height: 180px; }
+
+button:disabled {
+    background-color: gray;
+    cursor: not-allowed;
+  }
+  

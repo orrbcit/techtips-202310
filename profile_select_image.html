@@ -54,30 +54,11 @@
         <form>
             <fieldset class="mb-3" id="personalInfoFields" disabled>
 
+                <!-- Image Preview -->
+                <img id="profileImage" src="" alt="Profile Image" width="50" height="50">
 
-                <div id="profile-pictures">
-                    <label>
-                        <input type="radio" name="profilePicture" value="./images/image1.jpg">
-                        <img src="images/image1.jpg" style="width: 50px; height: 50px;" alt="Image 1">
-                    </label>
-                    <label>
-                        <input type="radio" name="profilePicture" value="./images/image2.jpg">
-                        <img src="images/image2.jpg" style="width: 50px; height: 50px;" alt="Image 2">
-                    </label>
-                    <label>
-                        <input type="radio" name="profilePicture" value="./images/image3.jpg">
-                        <img src="images/image3.jpg" style="width: 50px; height: 50px;" alt="Image 3">
-                    </label>
-                    <label>
-                        <input type="radio" name="profilePicture" value="/images/image5.jpg">
-                        <img src="images/image4.jpg" style="width: 50px; height: 50px;" alt="Image 5">
-                    </label>
-                </div>
-
-                <div class="container py-5">
-                    Selected Image: <img id="selected-picture" style="width: 50px; height: 50px;"
-                        alt="Selected profile picture">
-                </div>
+                <!-- File input for image selection -->
+                <input type="file" id="fileInput" accept="image/*">
 
                 <div class="form-group">
                     <label>Name</label>
@@ -93,11 +74,9 @@
                 </div>
             </fieldset>
             <div class="d-flex justify-content-end mt-5">
-                <button type="button" class="btn btn-info" onclick="editUserInfo()">Edit</button>
+                <button type="button" class="btn btn-secondary" onclick="editUserInfo()">Edit</button>
                 <span style="width: 10px"></span>
-                <button type="button" class="btn btn-warning" onclick="saveUserInfo()">Save</button>
-                <span style="width: 10px"></span>
-                <button type="button" class="btn btn-secondary" onclick="deleteUser()">Delete</button>
+                <button type="button" class="btn btn-info" onclick="saveUserInfo()">Save</button>
             </div>
         </form>
     </div>
@@ -112,50 +91,81 @@
     <script src="./scripts/skeleton.js"></script>
     <!-- <script src="./scripts/script.js"></script> -->
     <script>
+
+        // Attach event listener to the file input
+        // Function to handle file selection and Base64 encoding
+        document.getElementById("fileInput").addEventListener("change", handleFileSelect);
+        function handleFileSelect(event) {
+            var file = event.target.files[0]; // Get the selected file
+
+            if (file) {
+                var reader = new FileReader(); // Create a FileReader to read the file
+
+                // When file reading is complete
+                reader.onload = function (e) {
+                    var base64String = e.target.result.split(',')[1]; // Extract Base64 data
+
+                    // Save the Base64 string to Firestore under the user's profile
+                    saveProfileImage(base64String);
+                };
+
+                // Read the file as a Data URL (Base64 encoding)
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Function to save the Base64 image to Firestore
+        function saveProfileImage(base64String) {
+            // Save Base64 image as a field in the user's Firestore document
+            firebase.auth().onAuthStateChanged(user => {
+                if (user) {
+                    userId = user.uid;
+                    db.collection("users").doc(userId).set({
+                        profileImage: base64String
+                    }, { merge: true }) // Merge prevents overwriting existing data
+                        .then(function () {
+                            console.log("Profile image saved successfully!");
+                            displayProfileImage(base64String); // Display the saved image
+                        })
+                        .catch(function (error) {
+                            console.error("Error saving profile image: ", error);
+                        });
+                } else {
+                    console.error("No user is signed in.");
+                }
+            });
+        }
+
+        // Function to display the stored Base64 image on the profile page
+        function displayProfileImage(base64String) {
+            var imgElement = document.getElementById("profileImage");
+            imgElement.src = "data:image/png;base64," + base64String; // Set the image source
+        }
+
+
+        //---------------------------------------------------------
+        // Funcions to handle the form fields, save and edit
+        //---------------------------------------------------------
         function editUserInfo() {
             //Enable the form fields
             document.getElementById('personalInfoFields').disabled = false;
         }
 
-        //global variable with default
-        var ImageFile = "./images/elmo.jpg";
-
-        function addFileChooserListener() {
-            console.log("inside add File chooser listener");
-            const fileInput = document.getElementById("mypic-input"); // pointer #1
-            const image = document.getElementById("mypic-goes-here"); // pointer #2
-            image.src = ImageFile; //default initially
-            //attach listener to input file
-            //when this file changes, do something
-            fileInput.addEventListener('change', function (e) {
-                console.log("inside file chooser event handler!")
-                //the change event returns a file "e.target.files[0]"
-                ImageFile = e.target.files[0];
-                var blob = URL.createObjectURL(e.target.files[0]);
-
-                //change the DOM img element source to point to this file
-                image.src = blob; //assign the "src" property of the "img" tag
-            })
-        }
-        //addFileChooserListener();
-
         var currentUser; //put this right after you start script tag before writing any functions.
         function populateUserInfo() {
             firebase.auth().onAuthStateChanged(user => {
-                console.log(user.uid);
                 // Check if user is signed in:
                 if (user) {
-
                     //go to the correct user document by referencing to the user uid
                     currentUser = db.collection("users").doc(user.uid)
                     //get the document for current user.
                     currentUser.get()
                         .then(userDoc => {
-                            console.log(userDoc);
                             //get the data fields of the user
                             var userName = userDoc.data().name;
                             var userSchool = userDoc.data().school;
                             var userCity = userDoc.data().city;
+                            var userImage = userDoc.data().profileImage;
 
                             //if the data fields are not empty, then write them in to the form.
                             if (userName != null) {
@@ -167,7 +177,9 @@
                             if (userCity != null) {
                                 document.getElementById("cityInput").value = userCity;
                             }
-
+                            if (userImage != null) {
+                                document.getElementById("profileImage").src = "data:image/png;base64," + userImage;
+                            }
                         })
                 } else {
                     // No user is signed in.
@@ -178,15 +190,6 @@
 
         //call the function to run it 
         populateUserInfo();
-        window.onload = loadProfilePicture;
-
-        function loadProfilePicture() {
-            // Load the saved profile picture from localStorage, if available
-            const savedPicture = localStorage.getItem("profilePicture");
-            if (savedPicture) {
-                document.getElementById("selected-picture").src = `${savedPicture}`;
-            }
-        }
 
         function editUserInfo() {
             //Enable the form fields
@@ -196,9 +199,6 @@
         function saveUserInfo() {
             firebase.auth().onAuthStateChanged(function (user) {
 
-                saveProfilePicture();
-
-                //get values from the from
                 userName = document.getElementById('nameInput').value;
                 userSchool = document.getElementById('schoolInput').value;
                 userCity = document.getElementById('cityInput').value;
@@ -207,26 +207,13 @@
                 db.collection("users").doc(user.uid).update({
                     name: userName,
                     school: userSchool,
-                    city: userCity,
-                    profilePic: "localstorage" // Save the URL into users collection
+                    city: userCity
+                }).then(function () {
+                    console.log('Saved use profile info');
+                    document.getElementById('personalInfoFields').disabled =
+                        true;
                 })
-                    .then(function () {
-                        console.log('Saved use profile info');
-                        document.getElementById('personalInfoFields').disabled =
-                            true;
-                    })
             })
-        }
-
-        function saveProfilePicture() {
-            // Get the selected avatar
-            const selectedAvatar = document.querySelector('input[name="profilePicture"]:checked').value;
-
-            // Display the selected image immediately
-            document.getElementById("selected-picture").src = `images/${selectedAvatar}`;
-
-            // Save the avatar choice in localStorage
-            localStorage.setItem("profilePicture", selectedAvatar);
         }
 
         //-------------------------------------------------
@@ -262,6 +249,13 @@
                 }
             })
         }
+
+
+
+        // Call loadProfilePicture() when the page loads
+        //window.onload = loadProfilePicture;
+
+
     </script>
 
 </body>

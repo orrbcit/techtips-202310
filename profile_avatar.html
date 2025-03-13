@@ -52,9 +52,10 @@
     <div class="container">
         <h1>User Profile </h1>
         <form>
-            <fieldset class="mb-3" id="personalInfoFields">
+            <fieldset class="mb-3" id="personalInfoFields" disabled>
 
-                <div class="container py-5" id="profile-pictures">
+
+                <div id="profile-pictures">
                     <label>
                         <input type="radio" name="profilePicture" value="./images/image1.jpg">
                         <img src="images/image1.jpg" style="width: 50px; height: 50px;" alt="Image 1">
@@ -74,12 +75,30 @@
                 </div>
 
                 <div class="container py-5">
-                    <button onclick="saveProfilePicture()">Save Profile Picture</button>
-                </div>
-                <div>
-                    Selected Image:  <img id="selected-picture" style="width: 50px; height: 50px;" alt="Selected profile picture">
+                    Selected Image: <img id="selected-picture" style="width: 50px; height: 50px;"
+                        alt="Selected profile picture">
                 </div>
 
+                <div class="form-group">
+                    <label>Name</label>
+                    <input type="text" id="nameInput" class="form-control" placeholder="Enter your name">
+                </div>
+                <div class="form-group">
+                    <label>School</label>
+                    <input type="text" id="schoolInput" class="form-control" placeholder="Enter your school">
+                </div>
+                <div class="form-group">
+                    <label>City</label>
+                    <input type="text" id="cityInput" class="form-control" placeholder="Enter your city">
+                </div>
+            </fieldset>
+            <div class="d-flex justify-content-end mt-5">
+                <button type="button" class="btn btn-info" onclick="editUserInfo()">Edit</button>
+                <span style="width: 10px"></span>
+                <button type="button" class="btn btn-warning" onclick="saveUserInfo()">Save</button>
+                <span style="width: 10px"></span>
+                <!-- <button type="button" class="btn btn-secondary" onclick="deleteUser()">Delete</button> -->
+            </div>
         </form>
     </div>
 
@@ -123,6 +142,7 @@
         var currentUser; //put this right after you start script tag before writing any functions.
         function populateUserInfo() {
             firebase.auth().onAuthStateChanged(user => {
+                console.log(user.uid);
                 // Check if user is signed in:
                 if (user) {
 
@@ -131,11 +151,11 @@
                     //get the document for current user.
                     currentUser.get()
                         .then(userDoc => {
+                            console.log(userDoc);
                             //get the data fields of the user
                             var userName = userDoc.data().name;
                             var userSchool = userDoc.data().school;
                             var userCity = userDoc.data().city;
-                            var userImage = userDoc.data().profilePic;
 
                             //if the data fields are not empty, then write them in to the form.
                             if (userName != null) {
@@ -147,9 +167,7 @@
                             if (userCity != null) {
                                 document.getElementById("cityInput").value = userCity;
                             }
-                            if (userImage != null) {
-                                document.getElementById("mypic-goes-here").src = userImage;
-                            }
+
                         })
                 } else {
                     // No user is signed in.
@@ -159,7 +177,16 @@
         }
 
         //call the function to run it 
-        //populateUserInfo();
+        populateUserInfo();
+        window.onload = loadProfilePicture;
+
+        function loadProfilePicture() {
+            // Load the saved profile picture from localStorage, if available
+            const savedPicture = localStorage.getItem("profilePicture");
+            if (savedPicture) {
+                document.getElementById("selected-picture").src = `${savedPicture}`;
+            }
+        }
 
         function editUserInfo() {
             //Enable the form fields
@@ -168,38 +195,38 @@
 
         function saveUserInfo() {
             firebase.auth().onAuthStateChanged(function (user) {
-                var storageRef = storage.ref("images/" + user.uid + ".jpg");
 
-                //Asynch call to put File Object (global variable ImageFile) onto Cloud
-                storageRef.put(ImageFile)
+                saveProfilePicture();
+
+                //get values from the from
+                userName = document.getElementById('nameInput').value;
+                userSchool = document.getElementById('schoolInput').value;
+                userCity = document.getElementById('cityInput').value;
+
+                //Asynch call to save the form fields into Firestore.
+                db.collection("users").doc(user.uid).update({
+                    name: userName,
+                    school: userSchool,
+                    city: userCity,
+                    profilePic: "localstorage" // Save the URL into users collection
+                })
                     .then(function () {
-                        console.log('Uploaded to Cloud Storage.');
-
-                        //Asynch call to get URL from Cloud
-                        storageRef.getDownloadURL()
-                            .then(function (url) { // Get "url" of the uploaded file
-                                console.log("Got the download URL.");
-                                //get values from the from
-                                userName = document.getElementById('nameInput').value;
-                                userSchool = document.getElementById('schoolInput').value;
-                                userCity = document.getElementById('cityInput').value;
-
-                                //Asynch call to save the form fields into Firestore.
-                                db.collection("users").doc(user.uid).update({
-                                    name: userName,
-                                    school: userSchool,
-                                    city: userCity,
-                                    profilePic: url // Save the URL into users collection
-                                })
-                                    .then(function () {
-                                        console.log('Added Profile Pic URL to Firestore.');
-                                        console.log('Saved use profile info');
-                                        document.getElementById('personalInfoFields').disabled =
-                                            true;
-                                    })
-                            })
+                        console.log('Saved use profile info');
+                        document.getElementById('personalInfoFields').disabled =
+                            true;
                     })
             })
+        }
+
+        function saveProfilePicture() {
+            // Get the selected avatar
+            const selectedAvatar = document.querySelector('input[name="profilePicture"]:checked').value;
+
+            // Display the selected image immediately
+            document.getElementById("selected-picture").src = `images/${selectedAvatar}`;
+
+            // Save the avatar choice in localStorage
+            localStorage.setItem("profilePicture", selectedAvatar);
         }
 
         //-------------------------------------------------
@@ -235,31 +262,6 @@
                 }
             })
         }
-
-
-        function saveProfilePicture() {
-            // Get the selected avatar
-            const selectedAvatar = document.querySelector('input[name="profilePicture"]:checked').value;
-
-            // Display the selected image immediately
-            document.getElementById("selected-picture").src = `${selectedAvatar}`;
-
-            // Save the avatar choice in localStorage
-            localStorage.setItem("profilePicture", selectedAvatar);
-        }
-
-        function loadProfilePicture() {
-            // Load the saved profile picture from localStorage, if available
-            const savedPicture = localStorage.getItem("profilePicture");
-            if (savedPicture) {
-                document.getElementById("selected-picture").src = `${savedPicture}`;
-            }
-        }
-
-        // Call loadProfilePicture() when the page loads
-        window.onload = loadProfilePicture;
-
-
     </script>
 
 </body>
