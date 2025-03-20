@@ -38,10 +38,10 @@ function savePost() {
                 console.log("Post document added!");
                 console.log(doc.id);
                 // Function to display the stored Base64 image on the profile page
-                function displayProfileImage(ImageString) {
-                    var imgElement = document.getElementById("profileImage");
-                    imgElement.src = "data:image/png;base64," + ImageString; // Set the image source
-                }
+                // function displayProfileImage(ImageString) {
+                //     var imgElement = document.getElementById("profileImage");
+                //     imgElement.src = "data:image/png;base64," + ImageString; // Set the image source
+                // }
             })
         } else {
             // No user is signed in.
@@ -74,7 +74,7 @@ function savePostWithLocation() {
                     last_updated: firebase.firestore.FieldValue
                         .serverTimestamp() //current system time
                 }).then(doc => {
-                    console.log("1. Post document added!");
+                    console.log("Post document added!");
                     console.log(doc.id);
                     //uploadPic(doc.id);
                 })

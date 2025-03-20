@@ -140,5 +140,5 @@ function removeOldHikes() {
         .catch((error) => console.error("Error fetching hikes: ", error));
 }
 
-removeOldHikes();
+//removeOldHikes();
 
